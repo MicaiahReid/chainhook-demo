@@ -1,0 +1,25 @@
+{
+  "uuid": "1",
+  "name": "Test",
+  "chain": "bitcoin",
+  "version": 1,
+  "networks": {
+    "regtest": {
+      "start_block": 0,
+      "include_outputs": true,
+      "if_this": {
+        "scope": "inputs",
+        "txid": {
+          "txid": "0x5f7f5da0201e6a47f182493dbe2aae200dfcae830302f814c9f9abfb68414aab",
+          "follow_outputs": true
+        }
+      },
+      "then_that": {
+        "http_post": {
+          "url": "http://localhost:8545/chainhook",
+          "authorization_header": ""
+        }
+      }
+    }
+  }
+}

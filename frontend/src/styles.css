@@ -1,0 +1,17 @@
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.hiro {
+    background: linear-gradient(
+    29.53deg, 
+    #9528F7 2.94%, 
+    #522DE7 39.91%, 
+    #221A71 76.87%, 
+    #0F102B 93.08%
+  );
+  height: 300px;
+}
+
