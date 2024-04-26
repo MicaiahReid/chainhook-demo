@@ -4,6 +4,7 @@ mod query;
 use chainhook_sdk::chainhooks::bitcoin::BitcoinChainhookOccurrencePayload;
 use chainhook_sdk::utils::Context;
 use gql::{Context as GraphContext, NestorGraphqlSchema};
+use hiro_system_kit::{error, info};
 use rocket::config::{self, Config as RocketConfig, LogLevel};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::{ContentType, Header};
@@ -61,7 +62,14 @@ pub async fn start_server(
         .mount("/", routes)
         .ignite()
         .await?;
-
+    info!(
+        ctx.expect_logger(),
+        "Listening for Chainhook payloads at http://localhost:{port}/chainhook"
+    );
+    info!(
+        ctx.expect_logger(),
+        "View Chainhook payloads at http://localhost:{port}"
+    );
     let _ = std::thread::spawn(move || {
         let _ = hiro_system_kit::nestable_block_on(ignite.launch());
     });
@@ -69,20 +77,36 @@ pub async fn start_server(
 }
 
 #[post("/chainhook", data = "<payload>")]
-fn post_chainhook(context: &State<GraphContext>, payload: String) {
-    match context.inner().data.write() {
-        Ok(mut hook_store) => {
-            let hook: BitcoinChainhookOccurrencePayload = serde_json::from_str(&payload).unwrap();
+fn post_chainhook(ctx: &State<Context>, gql_context: &State<GraphContext>, payload: String) {
+    match gql_context.inner().data.write() {
+        Ok(mut block_store) => {
+            let hook: BitcoinChainhookOccurrencePayload =
+                serde_json::from_str(&payload).expect("Failed to deserialize chainhook payload");
 
             for rollback in hook.rollback.iter() {
-                hook_store.remove(&rollback.block.block_identifier.index);
+                block_store.remove(&rollback.block.block_identifier.index);
+                info!(
+                    ctx.expect_logger(),
+                    "Removed block {} ({}) from block store.",
+                    rollback.block.block_identifier.index,
+                    rollback.block.block_identifier.hash
+                );
             }
             for apply in hook.apply.iter() {
-                let serialized_block = serde_json::to_string(&apply.block).unwrap();
-                hook_store.insert(apply.block.block_identifier.index, serialized_block);
+                let serialized_block =
+                    serde_json::to_string(&apply.block).expect("Failed to serialize block");
+                block_store.insert(apply.block.block_identifier.index, serialized_block);
+                info!(
+                    ctx.expect_logger(),
+                    "Inserted block {} ({}) into block store.",
+                    apply.block.block_identifier.index,
+                    apply.block.block_identifier.hash
+                );
             }
         }
-        Err(_) => {}
+        Err(e) => {
+            error!(ctx.expect_logger(), "Failed to acquire lock: {e}");
+        }
     }
 }
 
