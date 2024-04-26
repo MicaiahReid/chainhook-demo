@@ -6,14 +6,14 @@ use std::sync::{Arc, RwLock};
 
 use chainhook_sdk::chainhooks::types::ChainhookConfig;
 use chainhook_sdk::chainhooks::types::{BitcoinChainhookFullSpecification, ChainhookSpecification};
-use chainhook_sdk::types::BitcoinNetwork;
+use chainhook_sdk::observer::EventObserverConfig;
+use chainhook_sdk::types::{BitcoinBlockSignaling, BitcoinNetwork};
 use server::gql::Context as GraphContext;
 use server::start_server;
 
 #[tokio::main]
 async fn main() {
     let json_predicate = std::fs::read_to_string("./predicate.json").expect("Unable to read file");
-    // let json_predicate = std::env::var("PREDICATE").expect("Missing required predicate");
 
     let hook_spec: BitcoinChainhookFullSpecification =
         serde_json::from_str(&json_predicate).expect("unable to parse chainhook spec");
@@ -29,29 +29,22 @@ async fn main() {
     let mut chainhook_config = ChainhookConfig::new();
     chainhook_config
         .register_specification(ChainhookSpecification::Bitcoin(bitcoin_hook_spec))
-        .unwrap();
+        .expect("failed to register chainhook spec");
 
-    let config = chainhook_sdk::observer::EventObserverConfig {
+    let config = EventObserverConfig {
         chainhook_config: Some(chainhook_config),
         bitcoin_rpc_proxy_enabled: false,
-        // only for stacks, right? can we remove?
-        ingestion_port: 0, //chainhook_sdk::observer::DEFAULT_INGESTION_PORT,
+        ingestion_port: 0,
         bitcoind_rpc_username: "regtest".to_string(),
-        bitcoind_rpc_password: "test1235".to_string(), // 1235 instead of 1234 to keep the hackers on their toes
+        bitcoind_rpc_password: "test1235".to_string(),
         bitcoind_rpc_url: "http://0.0.0.0:8332".to_string(),
-        // how will the bitcoin node notify chainhook of new blocks?
-        bitcoin_block_signaling: chainhook_sdk::types::BitcoinBlockSignaling::ZeroMQ(
-            "tcp://0.0.0.0:18543".to_string(),
-        ),
+        bitcoin_block_signaling: BitcoinBlockSignaling::ZeroMQ("tcp://0.0.0.0:18543".to_string()),
         display_logs: true,
-        // is this only used for stacks, can we remove?
         cache_path: String::new(),
         bitcoin_network: bitcoin_network,
-        // can we remove? only used for stacks
         stacks_network: stacks_network,
-
         data_handler_tx: None,
-        prometheus_monitoring_port: Some(20457),
+        prometheus_monitoring_port: None,
     };
     let (observer_commands_tx, observer_commands_rx) = channel();
 
@@ -86,7 +79,6 @@ async fn main() {
     let gql_context = GraphContext {
         data: Arc::new(RwLock::new(HashMap::new())),
     };
-    println!("starting server");
     let _ = start_server(gql_context, 8545, &ctx).await;
     let (tx, rx) = channel();
     match rx.recv() {
