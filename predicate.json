@@ -1,6 +1,6 @@
 {
-  "uuid": "1",
-  "name": "Test",
+  "uuid": "my-id",
+  "name": "Detect Transaction Inputs",
   "chain": "bitcoin",
   "version": 1,
   "networks": {
@@ -10,7 +10,7 @@
       "if_this": {
         "scope": "inputs",
         "txid": {
-          "txid": "0x5f7f5da0201e6a47f182493dbe2aae200dfcae830302f814c9f9abfb68414aab",
+          "txid": "0x32ed7f5c82d51d3ffdb8544190704e6b11e06d6d675fc527633adbde6a468e0f",
           "follow_outputs": true
         }
       },
