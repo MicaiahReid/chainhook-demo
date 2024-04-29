@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# chainhook-sdk = {version = "0.12.8", features = ["zeromq"] }
-chainhook-sdk = {path = "../chainhook/components/chainhook-sdk", default_features = false, features = ["zeromq", "debug"] }
+chainhook-sdk = {version = "0.13.0-beta.0", features = ["zeromq"] }
+# chainhook-sdk = {path = "../chainhook/components/chainhook-sdk", default_features = false, features = ["zeromq", "debug"] }
 hiro-system-kit = "0.3.4"
 juniper = "0.16.1"
 juniper_codegen = "0.16.0"
