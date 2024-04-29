@@ -6,7 +6,7 @@ use std::sync::{Arc, RwLock};
 
 use chainhook_sdk::chainhooks::types::ChainhookConfig;
 use chainhook_sdk::chainhooks::types::{BitcoinChainhookFullSpecification, ChainhookSpecification};
-use chainhook_sdk::observer::EventObserverConfig;
+use chainhook_sdk::observer::{start_bitcoin_event_observer, EventObserverConfig};
 use chainhook_sdk::types::{BitcoinBlockSignaling, BitcoinNetwork};
 use server::gql::Context as GraphContext;
 use server::start_server;
@@ -20,7 +20,6 @@ async fn main() {
 
     let bitcoin_network = BitcoinNetwork::Regtest;
     let stacks_network = chainhook_sdk::types::StacksNetwork::Mainnet;
-
     let mut bitcoin_hook_spec = hook_spec
         .into_selected_network_specification(&bitcoin_network)
         .expect("unable to parse bitcoin spec");
@@ -59,7 +58,7 @@ async fn main() {
     let moved_ctx = ctx.clone();
     let _ = hiro_system_kit::thread_named("Chainhook event observer")
         .spawn(move || {
-            let future = chainhook_sdk::observer::start_bitcoin_event_observer(
+            let future = start_bitcoin_event_observer(
                 config,
                 observer_commands_tx,
                 observer_commands_rx,
