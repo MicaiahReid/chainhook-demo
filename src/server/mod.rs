@@ -17,6 +17,7 @@ use std::error::Error;
 use std::ffi::OsStr;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::PathBuf;
+use std::sync::mpsc::channel;
 
 use self::gql::new_graphql_schema;
 
@@ -73,6 +74,12 @@ pub async fn start_server(
     let _ = std::thread::spawn(move || {
         let _ = hiro_system_kit::nestable_block_on(ignite.launch());
     });
+    let (tx, rx) = channel();
+    match rx.recv() {
+        Ok(_) => {}
+        Err(_) => {}
+    }
+    let _ = tx.send(true);
     Ok(())
 }
 
