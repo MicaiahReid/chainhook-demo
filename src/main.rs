@@ -79,10 +79,4 @@ async fn main() {
         data: Arc::new(RwLock::new(HashMap::new())),
     };
     let _ = start_server(gql_context, 8545, &ctx).await;
-    let (tx, rx) = channel();
-    match rx.recv() {
-        Ok(_) => {}
-        Err(_) => {}
-    }
-    let _ = tx.send(true);
 }
